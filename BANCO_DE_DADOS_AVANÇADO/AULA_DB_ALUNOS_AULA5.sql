@@ -439,119 +439,107 @@ SELECT 'Itens Venda', COUNT(*) FROM itens_venda;
 -- mostrar apenas as vendas que tem cliente e vendedor validos, ordenar por data da venda em ordem decrescente.
 -- solução:
 
+-- Questão 1: Inner Join básico
+-- Pega o nome do cliente, nome do vendedor e a data da venda
 SELECT
-    c.nome AS CLIENTE,
-    v.nome AS VENDEDOR,
-    vn.data_venda
-FROM vendas vn
-JOIN clientes c ON vn.id_cliente = c.id_cliente
-JOIN vendedores v ON vn.id_vendedor = v.id_vendedor
-ORDER BY vn.data_venda DESC;
+    c.nome AS CLIENTE,           -- nome do cliente, renomeado pra ficar claro
+    v.nome AS VENDEDOR,          -- nome do vendedor, também renomeado
+    vn.data_venda                -- data que a venda rolou
+FROM vendas vn                   -- tabela de vendas, apelidada de vn
+JOIN clientes c ON vn.id_cliente = c.id_cliente   -- junta só as vendas que têm cliente válido
+JOIN vendedores v ON vn.id_vendedor = v.id_vendedor -- junta só as vendas que têm vendedor válido
+ORDER BY vn.data_venda DESC;    -- ordena as vendas da mais recente pra mais antiga
 
 
-
--- questão 2 prova A
--- Todos os vendedores: nome, email, data de admissão, salário base e total de vendas. Incluir sem vendas.
+-- Questão 2: Todos os vendedores, incluindo os que não venderam nada
 SELECT
-    c.id_cliente,
-    c.nome AS cliente,
-    c.email,
-    c.cidade,
-    COUNT(vn.id_venda) AS total_vendas,
-    COALESCE(SUM(vn.valor_total), 0) AS valor_total
-FROM clientes c
-LEFT JOIN vendas vn ON c.id_cliente = vn.id_cliente
-GROUP BY c.id_cliente, c.nome, c.email, c.cidade
-ORDER BY valor_total DESC;
+    c.id_cliente,                -- id do cliente (aqui parece que tá pegando clientes, não vendedores)
+    c.nome AS cliente,           -- nome do cliente
+    c.email,                     -- email do cliente
+    c.cidade,                    -- cidade do cliente
+    COUNT(vn.id_venda) AS total_vendas,  -- conta quantas vendas esse cliente fez
+    COALESCE(SUM(vn.valor_total), 0) AS valor_total  -- soma o valor total das vendas, se não tiver, mostra 0
+FROM clientes c                 -- tabela clientes
+LEFT JOIN vendas vn ON c.id_cliente = vn.id_cliente  -- junta as vendas, mas mostra clientes mesmo sem venda
+GROUP BY c.id_cliente, c.nome, c.email, c.cidade    -- agrupa por cliente pra fazer as contas
+ORDER BY valor_total DESC;      -- ordena do cliente que gastou mais pro que gastou menos
 
 
-
--- questão 3 prova A
--- Todas as categorias: nome, quantidade de produtos e total de itens vendidos. Incluir sem produtos ou sem vendas.
+-- Questão 3: Todas as categorias, produtos e total vendido
 SELECT
-    p.id_produto,
-    p.nome AS produto,
-    cat.nome AS categoria,
-    p.preco_venda,
-    p.estoque,
-    
-    COUNT(iv.id_item) AS total_vendido,
-    COALESCE(SUM(iv.quantidade), 0) AS quantidade_total
-    
-FROM produtos p
-LEFT JOIN categorias cat ON p.id_categoria = cat.id_categoria
-LEFT JOIN itens_venda iv ON p.id_produto = iv.id_produto
+    p.id_produto,                -- id do produto
+    p.nome AS produto,           -- nome do produto
+    cat.nome AS categoria,       -- nome da categoria do produto
+    p.preco_venda,               -- preço de venda do produto
+    p.estoque,                  -- quantidade em estoque
+    COUNT(iv.id_item) AS total_vendido,  -- conta quantos itens desse produto foram vendidos
+    COALESCE(SUM(iv.quantidade), 0) AS quantidade_total  -- soma a quantidade vendida, 0 se não tiver venda
+FROM produtos p                 -- tabela produtos
+LEFT JOIN categorias cat ON p.id_categoria = cat.id_categoria  -- junta categoria, mesmo que produto não tenha
+LEFT JOIN itens_venda iv ON p.id_produto = iv.id_produto       -- junta itens vendidos, mesmo que não tenha venda
+GROUP BY p.id_produto, p.nome, cat.nome, p.preco_venda, p.estoque  -- agrupa pra fazer as contas
+ORDER BY total_vendido DESC;    -- ordena do mais vendido pro menos vendido
 
-GROUP BY p.id_produto, p.nome, cat.nome, p.preco_venda, p.estoque
-ORDER BY total_vendido DESC;
 
--- 4. Clientes que compraram: nome, cidade, total de compras e valor total gasto. Ordenar por valor total DESC. Top 20.
-
+-- Questão 4: Vendedores e total de vendas
 select
-	v.id_vendedor, 
-    v.nome as vendedor,
-    count(vn.id_venda) as total_vendas,
-sum(vn.valor_total) as valor_total
-from vendedores v
-join vendas vn on v.id_vendedor = vn.id_vendedor
-group by v.id_vendedor, v.nome
-order by valor_total desc;
+    v.id_vendedor,               -- id do vendedor
+    v.nome as vendedor,          -- nome do vendedor
+    count(vn.id_venda) as total_vendas,  -- conta quantas vendas ele fez
+    sum(vn.valor_total) as valor_total    -- soma o valor total das vendas
+from vendedores v              -- tabela vendedores
+join vendas vn on v.id_vendedor = vn.id_vendedor  -- junta só vendas que tem vendedor válido
+group by v.id_vendedor, v.nome   -- agrupa por vendedor pra contar e somar
+order by valor_total desc;       -- ordena do que mais vendeu pro que menos vendeu
 
 
-
--- 5 prova A.  Análise completa de vendas: cliente, cidade, vendedor, produto, categoria, quantidade, preço unitário e subtotal. Apenas com todas as informações válidas.
+-- Questão 5: Análise completa de vendas (simplificada)
 SELECT
-    c.nome AS cliente,
-    c.email,
-    c.telefone,
-    c.cidade,
-    MAX(vn.data_venda) AS ultima_data_compra,
-    MAX(vn.valor_total) AS valor_ultima_compra
-FROM clientes c
-LEFT JOIN vendas vn ON c.id_cliente = vn.id_cliente
-GROUP BY c.id_cliente, c.nome, c.email, c.telefone, c.cidade;
+    c.nome AS cliente,           -- nome do cliente
+    c.email,                     -- email do cliente
+    c.telefone,                  -- telefone do cliente
+    c.cidade,                    -- cidade do cliente
+    MAX(vn.data_venda) AS ultima_data_compra,  -- data da última compra feita pelo cliente
+    MAX(vn.valor_total) AS valor_ultima_compra -- valor da última compra
+FROM clientes c                 -- tabela clientes
+LEFT JOIN vendas vn ON c.id_cliente = vn.id_cliente  -- junta vendas, mesmo que cliente não tenha comprado
+GROUP BY c.id_cliente, c.nome, c.email, c.telefone, c.cidade;  -- agrupa por cliente
 
 
--- 6 Todos os itens de venda: ID da venda, nome do produto (se disponível), quantidade, preço unitário e subtotal. Usar RIGHT JOIN.
-
+-- Questão 6: Todos os itens de venda, usando RIGHT JOIN
 select
-vn.id_venda,
-vn.data_venda,
-coalesce(c.nome, 'cliente desconhecido') as cliente,
-coalesce(v.nome, 'vendedor desconhecido') as vendedor,
-vn.valor_total 
+    vn.id_venda,                 -- id da venda
+    vn.data_venda,               -- data da venda
+    coalesce(c.nome, 'cliente desconhecido') as cliente,  -- nome do cliente, ou texto padrão se não tiver
+    coalesce(v.nome, 'vendedor desconhecido') as vendedor, -- nome do vendedor, ou texto padrão se não tiver
+    vn.valor_total               -- valor total da venda
 from clientes c
-right join vendas vn on c.id_cliente = vn.id_cliente
-left join vendedores v on vn.id_vendedor = v.id_vendedor;
+right join vendas vn on c.id_cliente = vn.id_cliente  -- garante que todas as vendas apareçam, mesmo sem cliente válido
+left join vendedores v on vn.id_vendedor = v.id_vendedor; -- junta vendedor, se tiver
 
 
-
--- 7. Pares de clientes que compraram os mesmos produtos: nome de cada cliente, produto em comum e quantidade de cada um. Ordenar por produto.
+-- Questão 7: Pares de clientes que compraram os mesmos produtos (essa query lista clientes que compraram em todas as categorias, não pares)
 select 
-	c.id_cliente,
-    c.nome as cliente,
-    c.cidade, 
-    count(distinct p.id_categoria) as categorias_compradas
-    from clientes c 
-    join vendas vn on c.id_cliente = vn.id_cliente
-    join itens_venda iv on vn.id_venda = iv.id_venda
-    join produtos p on iv.id_produto = p.id_produto
-    group by c.id_cliente, c.nome, c.cidade
-    HAVING count(distinct p.id_categoria) = (select count(*) from categorias)
-    order by c.nome;
-    
-    
--- 8. Todos os produtos e itens de venda: nome do produto, categoria, quantidade vendida e subtotal. Incluir produtos não vendidos e itens sem produto válido.
-    
-SELECT
-    p.nome AS produto,
-    cat.nome AS categoria,
-    COALESCE(iv.quantidade, 0) AS quantidade_vendida,
-    COALESCE(iv.subtotal, 0) AS subtotal
-FROM produtos p
-LEFT JOIN categorias cat ON p.id_categoria = cat.id_categoria
-RIGHT JOIN itens_venda iv ON p.id_produto = iv.id_produto
-ORDER BY p.nome;
+    c.id_cliente,                -- id do cliente
+    c.nome as cliente,           -- nome do cliente
+    c.cidade,                   -- cidade do cliente
+    count(distinct p.id_categoria) as categorias_compradas  -- conta quantas categorias diferentes ele comprou
+from clientes c 
+join vendas vn on c.id_cliente = vn.id_cliente
+join itens_venda iv on vn.id_venda = iv.id_venda
+join produtos p on iv.id_produto = p.id_produto
+group by c.id_cliente, c.nome, c.cidade
+HAVING count(distinct p.id_categoria) = (select count(*) from categorias)  -- só clientes que compraram em todas as categorias
+order by c.nome;
 
-    
-    
+
+-- Questão 8: Todos os produtos e itens de venda, incluindo produtos não vendidos e itens sem produto válido
+SELECT
+    p.nome AS produto,           -- nome do produto
+    cat.nome AS categoria,       -- nome da categoria
+    COALESCE(iv.quantidade, 0) AS quantidade_vendida,  -- quantidade vendida, 0 se não tiver venda
+    COALESCE(iv.subtotal, 0) AS subtotal  -- subtotal da venda, 0 se não tiver
+FROM produtos p
+LEFT JOIN categorias cat ON p.id_categoria = cat.id_categoria  -- junta categoria, mesmo que produto não tenha
+RIGHT JOIN itens_venda iv ON p.id_produto = iv.id_produto      -- garante que todos os itens de venda apareçam, mesmo sem produto válido
+ORDER BY p.nome;
