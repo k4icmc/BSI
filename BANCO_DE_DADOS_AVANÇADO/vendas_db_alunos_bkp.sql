@@ -222,10 +222,49 @@ SELECT nome FROM clientes c
 WHERE not EXISTS (SELECT 1 FROM pedidos p WHERE p.id_cliente=c.id_cliente)
 
 -- =============================================================================
--- **Exercício 1:** Liste os nomes dos clientes cujo valor total de pedidos é superior ao valor total de pedidos dos clientes da cidade 'São Paulo'. **
 
--- **Exercício 2:** Crie uma subconsulta que calcula o total de vendas por mês. A consulta principal deve retornar somente os meses onde o total de vendas foi superior a R$ 3.000. **
 
--- **Exercício 3:** Liste os nomes dos produtos que nunca foram vendidos em nenhum pedido. **
 
--- **Exercício 4:** Liste os pedidos (ID e valor) junto com a média de valor dos pedidos feitos pelo mesmo cliente. **
+-- *Exercício 1:* Liste os nomes dos clientes cujo valor total de pedidos é superior ao valor total de pedidos dos clientes da cidade 'São Paulo'. **
+
+-- =========================
+SELECT nome -- seleciona o nome do cliente
+FROM clientes -- da tabela de clientes
+WHERE gasto_total > ( -- filtra quem gastou mais que...
+    SELECT AVG(gasto_total) -- a média de gasto
+    FROM clientes -- da tabela clientes
+    WHERE cidade = 'São Paulo' -- considerando só quem é de SP
+); -- fecha a subconsulta
+
+-- *Exercício 2:* Crie uma subconsulta que calcula o total de vendas por mês. A consulta principal deve retornar somente os meses onde o total de vendas foi superior a R$ 3.000. **
+
+SELECT mes, total_vendas -- seleciona o mês e o total vendido
+FROM ( -- começa uma subconsulta (tipo uma tabela temporária)
+    SELECT 
+        MONTH(data_pedido) AS mes, -- pega o mês da data do pedido
+        SUM(valor_total) AS total_vendas -- soma os valores dos pedidos do mês
+    FROM pedidos -- da tabela pedidos
+    GROUP BY MONTH(data_pedido) -- agrupa tudo por mês
+) AS vendas_mes -- dá um nome pra subconsulta
+WHERE total_vendas > 3000; -- filtra só meses com mais de 3k de vendas
+
+-- *Exercício 3:* Liste os nomes dos produtos que nunca foram vendidos em nenhum pedido. **
+
+SELECT nome_produto -- seleciona o nome do produto
+FROM produtos -- da tabela produtos
+WHERE id_produto NOT IN ( -- pega produtos que NÃO estão...
+    SELECT id_produto -- na lista de produtos
+    FROM itens_pedido -- que já apareceram nos pedidos
+); -- fecha a subconsulta
+
+-- *Exercício 4:* Liste os pedidos (ID e valor) junto com a média de valor dos pedidos feitos pelo mesmo cliente. **
+
+SELECT 
+    p.id_pedido, -- pega o id do pedido
+    p.valor_total, -- pega o valor do pedido
+    ( -- começa a subconsulta
+        SELECT AVG(p2.valor_total) -- calcula a média dos pedidos
+        FROM pedidos p2 -- da tabela pedidos (com outro apelido)
+        WHERE p2.id_cliente = p.id_cliente -- só do mesmo cliente
+    ) AS media_cliente -- nome da coluna da média
+FROM pedidos p; -- tabela principal com apelido p
