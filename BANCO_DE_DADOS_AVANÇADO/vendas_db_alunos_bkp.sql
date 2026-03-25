@@ -4,6 +4,9 @@
 -- Tema: Subconsultas, Views e Índices
 -- ============================================================================
 
+-- corrigido: evitar erro se o banco não existir
+DROP DATABASE IF EXISTS lab_ecommerce;
+
 -- Criar o banco de dados
 CREATE DATABASE IF NOT EXISTS lab_ecommerce;
 USE lab_ecommerce;
@@ -193,37 +196,30 @@ SELECT 'Itens Pedido', COUNT(*) FROM itens_pedido;
 -- FIM DO SCRIPT
 -- ============================================================================
 
-
-
-
-
 SELECT nome_produto, preco 
 FROM produtos 
 WHERE preco > (SELECT AVG(preco) FROM produtos);
 
-SELECT AVG(preco) FROM produtos
-
+SELECT AVG(preco) FROM produtos;
 
 -- =============================================================
 -- **Exemplo 2: Comparação IN vs EXISTS**
 -- *Objetivo: Listar clientes que já fizeram algum pedido.*
 -- =============================================================
 SELECT nome FROM clientes
-WHERE id_cliente NOT IN (SELECT id_cliente FROM pedidos)
+WHERE id_cliente NOT IN (SELECT id_cliente FROM pedidos);
 
-SELECT id_cliente FROM pedidos
+SELECT id_cliente FROM pedidos;
 
 INSERT INTO clientes (nome, email, cidade, estado, gasto_total) VALUES
-('Ane', 'ane.silva@email.com', 'Formosa', 'GO', 15500.00)
+('Ane', 'ane.silva@email.com', 'Formosa', 'GO', 15500.00);
 
 -- Usando EXISTS (Geralmente mais rápido em grandes volumes)
 
 SELECT nome FROM clientes c
-WHERE not EXISTS (SELECT 1 FROM pedidos p WHERE p.id_cliente=c.id_cliente)
+WHERE NOT EXISTS (SELECT 1 FROM pedidos p WHERE p.id_cliente=c.id_cliente);
 
 -- =============================================================================
-
-
 
 -- *Exercício 1:* Liste os nomes dos clientes cujo valor total de pedidos é superior ao valor total de pedidos dos clientes da cidade 'São Paulo'. **
 
