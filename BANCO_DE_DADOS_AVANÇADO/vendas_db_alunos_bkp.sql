@@ -260,7 +260,45 @@ SELECT
     p.valor_total, -- pega o valor do pedido
     ( -- começa a subconsulta
         SELECT AVG(p2.valor_total) -- calcula a média dos pedidos
-        FROM pedidos p2 -- da tabela pedidos (com outro apelido)
+        FROM pedidos p2 -- da tabela pedidos (com tipo outro apelido)
         WHERE p2.id_cliente = p.id_cliente -- só do mesmo cliente
     ) AS media_cliente -- nome da coluna da média
 FROM pedidos p; -- tabela principal com apelido p
+
+
+
+
+
+
+
+-- cria a view vw_clientes_ricos
+CREATE VIEW vw_clientes_ricos AS
+SELECT nome, cidade, gasto_total -- seleciona nome, cidade e quanto o cliente gastou
+FROM clientes -- da tabela clientes
+WHERE gasto_total > 5000; -- filtra só quem gastou mais de 5000 (clientes "ricos" kkk)
+
+SELECT * FROM vw_clientes_ricos;
+
+
+
+
+
+
+-- /**Exercício 7:** Crie uma view chamada 'vw_produtos_fornecedores' que retorne os produtos com os nomes dos fornecedores e os preços médios dos produtos de cada fornecedor.
+
+-- criando a view com produtos + fornecedor + média por fornecedor 😩
+CREATE VIEW vw_produtos_fornecedores AS
+SELECT 
+    p.nome_produto, -- nome do produto
+    f.nome_fornecedor, -- nome do fornecedor
+    p.preco, -- preço produto
+    ( -- começa a subconsulta
+        SELECT AVG(p2.preco) -- calcula a média de preços
+        FROM produtos p2 -- outra referência da tabela produtos
+        WHERE p2.id_fornecedor = p.id_fornecedor -- só dos produtos do mesmo fornecedor
+    ) AS media_preco_fornecedor -- nome da coluna da média
+FROM produtos p -- tabela produtos com apelido
+JOIN fornecedores f ON p.id_fornecedor = f.id_fornecedor;
+
+select * from vw_produtos_fornecedores; -- chama ae papai 🔥
+
